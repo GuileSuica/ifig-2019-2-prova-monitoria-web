@@ -1,6 +1,6 @@
 <?php
-
-require 'config.php'
+require 'config.php';
+require 'conect.php';
 
 if (!is_logged()) {
     header('location: index.php');
@@ -12,26 +12,31 @@ if (!isset($_GET['id'])) {
     exit();
 }
 
-$id = $_GET['id']
+$id = $_GET['id'];
+try{
+    $stmt = $pdo->prepare('
+        SELECT  services.*, clients.id as client_id
+        FROM  services
+        LEFT JOIN clients ON clients.id = services.client_id
+        WHERE services.id = ?
+    ');
+    $stmt->bindParam(1, $id);
+    $stmt->execute(array($id));
+    $res = $stmt->fetchAll();
 
-$stmt = $pdo->prepare('
-    SELECT  services.*,
-            clients.id as client_id
-    FROM    services
-            LEFT JOIN clients ON clients.id = services.client_id
-    WHERE services.id = ?
-');
-$stmt->execute(array($id));
+    if (sizeof($res) == 0) {
+        header('location: home.php');
+        exit();
+    }
+    $service = $res[0];
 
-$res = $stmt->fetchAll();
-if (sizeof($res) == 0) {
-    header('location: home.php');
-    exit();
+    $stm = $pdo->query('SELECT * FROM clients ORDER BY name');
+    $stm->execute();
+    $clients = $stmt->fetchAll();
+    
+}catch(PDOException $e){
+    print_r($e);
 }
-$service = $res[0];
-
-$stmt = $pdo->query('SELECT * FROM clients ORDER BY name');
-$clients = $stmt->fetchAll();
 
 ?>
 <!DOCTYPE html>

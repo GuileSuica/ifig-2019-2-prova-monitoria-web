@@ -1,22 +1,28 @@
 <?php
-
 require 'config.php';
+require 'conect.php';
 
 if (!is_logged()) {
     header('location: index.php');
     exit();
 }
+try{
+    $stm = $pdo->prepare('SELECT * FROM clients ORDER BY name');
+    $stm -> execute();
+    $clients = $stm->fetchAll();
 
-$stmt = $pdo->execute('SELECT * FROM clients ORDER BY name');
-$clients = $stmt->fetchAll();
-
-$stmt = $pdo->query('
-    SELECT  services.*,
-            clients.name as client_name
-    FROM    services
-            LEFT JOIN clients ON clients.id = services.client_id
-')
-$services = $stmt->fetchAll();
+    $stmt = $pdo->prepare('
+        SELECT  services.*,
+                clients.name as client_name
+        FROM    services
+                LEFT JOIN clients ON clients.id = services.client_id;
+    ');
+    $stmt->execute();
+    $services = $stmt->fetchAll();
+    
+}catch(PDOException $e){
+    print_r($e);
+}
 
 ?>
 <!DOCTYPE html>
